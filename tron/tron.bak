@@ -1,0 +1,90 @@
+import pygame
+import tron_engine
+
+pygame.init()
+
+res = width, height = (800, 600)
+black = (0, 0, 0)
+white = (255, 255, 255)
+red = (255, 0, 0)
+clock = pygame.time.Clock()
+size = 10
+FPS = 30
+screen = pygame.display.set_mode(res)
+pygame.display.set_caption('Tron')
+
+
+def message(msg, color):
+    screen_text = pygame.font.SysFont(None, 25).render(msg, True, color)
+    screen.blit(screen_text, [width/2, height/2])
+
+
+def over(gameExit, gameOver):
+    screen.fill(black)
+    message("Game Over, press A to pay again or Q to quit", white)
+    pygame.display.update()
+
+    # listen for action
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                gameExit = True
+                gameOver = False
+            elif event.key == pygame.K_a:
+                gameLoop()
+
+    return gameExit, gameOver
+
+
+def gameLoop():
+    color = black
+    position = [width/2, height/2]
+    speed = [0, 0]
+    player = tron_engine.Player(screen, res, position, color, size, speed)
+    player.set_path()
+
+
+
+    gameExit = False
+    gameOver = False
+
+    while not gameExit:
+        while gameOver:
+            player.path = []
+            screen.fill(white)
+            gameExit, gameOver = over(gameExit, gameOver)
+
+        # events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                gameExit = True
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    player.change_direction("left")
+                elif event.key == pygame.K_RIGHT:
+                    player.change_direction("right")
+                elif event.key == pygame.K_UP:
+                    player.change_direction("up")
+                elif event.key == pygame.K_DOWN:
+                    player.change_direction("down")
+
+        # logic
+        if player.collision():
+            gameOver = True
+        player.move()
+
+        if player.collision_with_path(player.path):
+            gameOver = True
+
+        # display
+        screen.fill(white)
+        player.drawplayer()
+        pygame.display.update()
+
+        # fps
+        clock.tick(FPS)
+
+    pygame.quit()
+    quit()
+
+gameLoop()
